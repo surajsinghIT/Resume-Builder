@@ -1,0 +1,11 @@
+export const HOME = '/';
+export const TEMPLATES = '/templates';
+export const BUILDER = '/builder';
+export const DASHBOARD = '/dashboard';
+export const PRICING = '/pricing';
+export const FEATURES = '/features';
+export const ABOUT = '/about';
+export const CONTACT = '/contact';
+export const SIGNIN = '/signin';
+export const SIGNUP = '/signup';
+export const LOGOUT = '/logout';

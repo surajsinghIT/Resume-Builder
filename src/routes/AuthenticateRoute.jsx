@@ -1,0 +1,18 @@
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { SIGNIN } from "../utils/RouteList";
+import { useEffect, useState } from "react";
+
+const AuthenticateRoute = () => {
+  const location = useLocation();
+  const [token, setToken] = useState(sessionStorage.getItem("token"));
+
+  useEffect(() => {
+    // Re-check token whenever route changes or token might update
+    const storedToken = sessionStorage.getItem("token");
+    setToken(storedToken);
+  }, [location]);
+
+  return token ? <Outlet /> : <Navigate to={SIGNIN} replace />;
+};
+
+export default AuthenticateRoute;

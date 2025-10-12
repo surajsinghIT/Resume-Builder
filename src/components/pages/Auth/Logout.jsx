@@ -37,7 +37,7 @@ const Logout = () => {
 
   const handleGoHome = () => {
     navigate(HOME);
-  };
+  };  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 py-12">
@@ -83,7 +83,7 @@ const Logout = () => {
               {/* Redirect Countdown */}
               <div className="mb-8 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
                 <p className="text-cyan-400 text-sm">
-                  Redirecting to homepage in{' '}
+                  Redirecting to signin page in{' '}
                   <span className="text-2xl font-bold">{countdown}</span> seconds
                 </p>
               </div>
@@ -96,13 +96,7 @@ const Logout = () => {
                 >
                   <LogOut size={20} className="rotate-180" />
                   Sign In Again
-                </button>
-                <button
-                  onClick={handleGoHome}
-                  className="w-full py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all"
-                >
-                  Go to Homepage
-                </button>
+                </button>                
               </div>
             </>
           )}

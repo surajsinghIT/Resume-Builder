@@ -1,17 +1,19 @@
-import React from 'react';
-import { Sparkles } from 'lucide-react';
+import "./Loader.css";
 
-const Loader = () => {
+const Loader = ({text}) => {
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <div className="relative">
-        <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-2xl flex items-center justify-center animate-pulse">
-          <Sparkles className="text-white" size={40} />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-2xl blur-xl opacity-50 animate-ping"></div>
-      </div>
-      <p className="text-white text-lg font-semibold">Loading...</p>
-    </div>
+    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="wrapper">
+        <div className="circle"></div>
+        <div className="circle"></div>
+        <div className="circle"></div>
+        <div className="shadow"></div>
+        <div className="shadow"></div>
+        <div className="shadow"></div>                
+      </div>            
+    </div>    
+    </>
   );
 };
 

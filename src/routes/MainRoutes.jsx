@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Loader from "../components/common/Loader";
 import { HOME, TEMPLATES, BUILDER, DASHBOARD, PRICING, FEATURES, ABOUT, CONTACT,SIGNIN,SIGNUP,LOGOUT } from "../utils/RouteList";
+import AuthenticateRoute from "./AuthenticateRoute";
 
 // Lazy load all pages
 const HomePage = lazy(()=> import("../components/pages/Home/HomePage"))
@@ -19,24 +20,24 @@ const LogoutPage = lazy(()=> import('../components/pages/Auth/Logout'))
 function MainRoutes() {
   return (
     <Suspense
-      fallback={
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-          <Loader />
-        </div>
+      fallback={       
+          <Loader />       
       }
     >
       <Routes>
-        <Route path={HOME} element={<HomePage />} />
-        <Route path={TEMPLATES} element={<TemplatesPage />} />
-        <Route path={BUILDER} element={<BuilderPage />} />
-        <Route path={DASHBOARD} element={<DashboardPage />} />
-        <Route path={PRICING} element={<PricingPage />} />
-        <Route path={FEATURES} element={<FeaturesPage />} />
-        <Route path={ABOUT} element={<AboutPage />} />
-        <Route path={CONTACT} element={<ContactPage />} />
+        <Route element={<AuthenticateRoute/>}>
+          <Route path={HOME} element={<HomePage />} />
+          <Route path={TEMPLATES} element={<TemplatesPage />} />
+          <Route path={BUILDER} element={<BuilderPage />} />
+          <Route path={DASHBOARD} element={<DashboardPage />} />
+          <Route path={PRICING} element={<PricingPage />} />
+          <Route path={FEATURES} element={<FeaturesPage />} />
+          <Route path={ABOUT} element={<AboutPage />} />
+          <Route path={CONTACT} element={<ContactPage />} />        
+          <Route path={LOGOUT} element={<LogoutPage />} />
+        </Route>
         <Route path={SIGNIN} element={<SignInPage />} />
         <Route path={SIGNUP} element={<SignUpPage />} />
-        <Route path={LOGOUT} element={<LogoutPage />} />
       </Routes>
     </Suspense>
   );

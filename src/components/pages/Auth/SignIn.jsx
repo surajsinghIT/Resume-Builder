@@ -1,8 +1,10 @@
+// src/pages/Auth/SignIn.jsx - Updated with Forgot Password Modal
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, X, Send } from "lucide-react";
 import { HOME, DASHBOARD } from "../../../utils/RouteList";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { app } from "./FirebaseAuth/Firebase";
 import { toast, ToastContainer } from "react-toastify";
 import Loader from "../../common/Loader";
@@ -10,6 +12,11 @@ import Loader from "../../common/Loader";
 const SignIn = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailError, setResetEmailError] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -77,6 +84,49 @@ const SignIn = () => {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
+    }
+  };
+
+  // Forgot Password Handler
+  const handleForgotPasswordClick = () => {
+    setShowForgotPassword(true);
+    setResetEmail("");
+    setResetEmailError("");
+  };
+
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+    setResetEmail("");
+    setResetEmailError("");
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    
+    // Validate email
+    if (!resetEmail) {
+      setResetEmailError("Email is required");
+      return;
+    } else if (!/\S+@\S+\.\S+/.test(resetEmail)) {
+      setResetEmailError("Email is invalid");
+      return;
+    }
+
+    setIsResetting(true);
+    
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      toast.success("Password reset email sent! Check your inbox.");
+      setIsResetting(false);
+      closeForgotPassword();
+    } catch (error) {
+      console.log("Reset error:", error.code);
+      if (error.code === "auth/user-not-found") {
+        toast.error("No account found with this email.");
+      } else {
+        toast.error("Failed to send reset email. Please try again.");
+      }
+      setIsResetting(false);
     }
   };
 
@@ -193,6 +243,7 @@ const SignIn = () => {
                   </label>
                   <button
                     type="button"
+                    onClick={handleForgotPasswordClick}
                     className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
                     Forgot password?
@@ -203,12 +254,12 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg
+                   hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center
+                    gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <>
-                    <LogIn size={20} />
-                    Sign In
-                  </>
+                  <LogIn size={20} />
+                  Sign In
                 </button>
               </form>
 
@@ -288,6 +339,98 @@ const SignIn = () => {
               </Link>
             </div>
           </div>
+
+          {/* Forgot Password Modal */}
+          {showForgotPassword && (
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+              onClick={closeForgotPassword}
+            >
+              <div 
+                className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 shadow-2xl max-w-md w-full mx-4 animate-fade-in"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h3 className="text-2xl font-bold text-white">Reset Password</h3>
+                  <button
+                    onClick={closeForgotPassword}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <form onSubmit={handleResetPassword} className="p-6">
+                  <p className="text-gray-300 mb-6">
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
+                  
+                  <div className="mb-6">
+                    <label
+                      htmlFor="resetEmail"
+                      className="block text-sm font-semibold text-white mb-2"
+                    >
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        size={20}
+                      />
+                      <input
+                        type="email"
+                        id="resetEmail"
+                        value={resetEmail}
+                        onChange={(e) => {
+                          setResetEmail(e.target.value);
+                          setResetEmailError("");
+                        }}
+                        className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${
+                          resetEmailError ? "border-red-500" : "border-white/20"
+                        } rounded-lg text-white placeholder-gray-400 focus:border-cyan-500 focus:outline-none transition-colors`}
+                        placeholder="you@example.com"
+                        autoFocus
+                      />
+                    </div>
+                    {resetEmailError && (
+                      <p className="mt-1 text-sm text-red-400">{resetEmailError}</p>
+                    )}
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={closeForgotPassword}
+                      className="flex-1 px-6 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isResetting}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isResetting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={20} />
+                          Reset Password
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
           <ToastContainer />
         </div>
       )}

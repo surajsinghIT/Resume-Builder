@@ -1,42 +1,52 @@
 // src/components/Common/Navbar.jsx
 
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sparkles, LogIn, LogOut, UserPlus, User } from 'lucide-react';
-import { HOME, BUILDER, DASHBOARD, ABOUT, CONTACT, SIGNIN, SIGNUP, LOGOUT } from '../../utils/RouteList';
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X, Sparkles, LogIn, LogOut, UserPlus, User } from "lucide-react";
+import {
+  HOME,
+  BUILDER,
+  DASHBOARD,
+  ABOUT,
+  CONTACT,
+  SIGNIN,
+  SIGNUP,
+  LOGOUT,
+} from "../../utils/RouteList";
+import { userAuthentication } from "../../utils/Helpers";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const location = useLocation();
 
   // Check authentication status
   useEffect(() => {
     const checkAuth = () => {
-      const authStatus = sessionStorage.getItem('isAuthenticated') === 'true';
-      const name = sessionStorage.getItem('name');
+      const authStatus = sessionStorage.getItem("isAuthenticated") === "true";
+      const name = sessionStorage.getItem("name");
       setIsAuthenticated(authStatus);
       setUserName(name);
     };
 
     checkAuth();
-    
+
     // Listen for storage changes (when user logs in/out in another tab)
-    window.addEventListener('storage', checkAuth);
-    
-    return () => window.removeEventListener('storage', checkAuth);
+    window.addEventListener("storage", checkAuth);
+
+    return () => window.removeEventListener("storage", checkAuth);
   }, [location]);
 
   const navigation = [
-    { name: 'Home', path: HOME },
-    { name: 'Builder', path: BUILDER },
-    { name: 'Dashboard', path: DASHBOARD },
-    { name: 'About', path: ABOUT },
-    { name: 'Contact', path: CONTACT }
+    { name: "Home", path: HOME },
+    { name: "Builder", path: BUILDER },
+    { name: "Dashboard", path: DASHBOARD },
+    { name: "About", path: ABOUT },
+    { name: "Contact", path: CONTACT },
   ];
 
-  console.log("sess",sessionStorage.getItem("token"));
+  console.log("sess", sessionStorage.getItem("token"));
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
@@ -47,25 +57,32 @@ const Navbar = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-lg flex items-center justify-center">
               <Sparkles className="text-white" size={24} />
             </div>
-            <span className="text-2xl font-bold text-white">Resume Builder</span>
+            <span className="text-2xl font-bold text-white">
+              Resume Builder
+            </span>
           </Link>
-          
+
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+
+          <div className="hidden md:flex items-center gap-8 ">
             {navigation.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors
+                             ${
+                               !userAuthentication() &&
+                               "pointer-events-none opacity-50 cursor-not-allowed"
+                             } ${
                   location.pathname === item.path
-                    ? 'text-cyan-400'
-                    : 'text-gray-300 hover:text-white'
+                    ? "text-cyan-400"
+                    : "text-gray-300 hover:text-white"
                 }`}
               >
                 {item.name}
               </Link>
             ))}
-            
+
             {/* Auth Buttons - Desktop */}
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
@@ -73,10 +90,10 @@ const Navbar = () => {
                 <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/20">
                   <User size={18} className="text-cyan-400" />
                   <span className="text-sm text-white font-medium">
-                    {userName.split(' ')[0] || userName.split('@')[0]}
+                    {userName.split(" ")[0] || userName.split("@")[0]}
                   </span>
                 </div>
-                
+
                 {/* Logout Button */}
                 <Link
                   to={LOGOUT}
@@ -96,7 +113,7 @@ const Navbar = () => {
                   <LogIn size={18} />
                   Sign In
                 </Link>
-                
+
                 {/* Sign Up Button */}
                 <Link
                   to={SIGNUP}
@@ -131,28 +148,26 @@ const Navbar = () => {
                 onClick={() => setMenuOpen(false)}
                 className={`block w-full text-left px-4 py-2 rounded-lg transition-colors ${
                   location.pathname === item.path
-                    ? 'bg-cyan-500/20 text-cyan-400'
-                    : 'text-gray-300 hover:bg-white/10'
+                    ? "bg-cyan-500/20 text-cyan-400"
+                    : "text-gray-300 hover:bg-white/10"
                 }`}
               >
                 {item.name}
               </Link>
             ))}
-            
+
             {/* Divider */}
             <div className="border-t border-white/10 my-4"></div>
-            
+
             {/* Auth Buttons - Mobile */}
             {isAuthenticated ? (
               <div className="space-y-3">
                 {/* User Info */}
                 <div className="flex items-center gap-2 px-4 py-3 bg-white/10 rounded-lg border border-white/20">
                   <User size={20} className="text-cyan-400" />
-                  <span className="text-white font-medium">
-                    {userName}
-                  </span>
+                  <span className="text-white font-medium">{userName}</span>
                 </div>
-                
+
                 {/* Logout Button */}
                 <Link
                   to={LOGOUT}
@@ -174,7 +189,7 @@ const Navbar = () => {
                   <LogIn size={20} />
                   Sign In
                 </Link>
-                
+
                 {/* Sign Up Button */}
                 <Link
                   to={SIGNUP}

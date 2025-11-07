@@ -1,7 +1,7 @@
 // src/pages/Auth/SignIn.jsx - Updated with Forgot Password Modal
 
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -12,13 +12,14 @@ import {
   X,
   Send,
 } from "lucide-react";
-import { HOME, DASHBOARD } from "../../../utils/RouteList";
+import { HOME, DASHBOARD, SIGNUP, SIGNIN } from "../../../utils/RouteList";
 import {
   getAuth,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signInWithPopup,
   GoogleAuthProvider,
+  GithubAuthProvider,
 } from "firebase/auth";
 import { app } from "./FirebaseAuth/Firebase";
 import { toast, ToastContainer } from "react-toastify";
@@ -40,8 +41,18 @@ const SignIn = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const location = useLocation();
+
+  useEffect(() => {
+    const toastMsg = location?.state?.toastMessage;
+    if (toastMsg) {
+      toast.info(toastMsg);
+    }
+  }, []);
+
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
+  const providerGithub = new GithubAuthProvider();
 
   const validateForm = () => {
     const newErrors = {};
@@ -159,7 +170,9 @@ const SignIn = () => {
         sessionStorage.setItem("token", token);
         setIsLoading(false);
         toast.success("User signed up successsfully.");
-        navigate(HOME);
+        if(token){
+          navigate(HOME);        
+        }
       })
       .catch((error) => {
         // Handle Errors here.
@@ -168,7 +181,43 @@ const SignIn = () => {
         console.log(
           `Google authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
         );
-        toast.error("Something went wrong.");
+        toast.error("Something went wrong.");        
+      });
+  };
+
+  const handleSignup = () => {
+    navigate(SIGNUP);
+  };
+
+  // GitHub requires HTTPS for redirect URIs,
+  // so http://localhost will not work directly for Firebase’s GitHub login.
+  const handleGithubLogin = () => {
+    signInWithPopup(auth, providerGithub)
+      .then((result) => {
+        // This gives you a GitHub Access Token. You can use it to access the GitHub API.
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        const user = result.user;
+        console.log("credential", credential);
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userEmail", user?.email);
+        sessionStorage.setItem("name", user?.displayName);
+        const token = credential?.accessToken;
+        sessionStorage.setItem("token", token);
+        setIsLoading(false);
+        toast.success("User signed up successsfully.");
+        if(token){
+          navigate(HOME);        
+        }
+        
+      })
+      .catch((error) => {
+         // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(
+          `github authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
+        );
+        toast.error("Something went wrong.");              
       });
   };
 
@@ -351,6 +400,7 @@ const SignIn = () => {
                 <button
                   type="button"
                   className="px-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                  onClick={handleGithubLogin}
                 >
                   <svg
                     className="w-5 h-5"
@@ -366,7 +416,10 @@ const SignIn = () => {
               {/* Sign Up Link */}
               <p className="mt-6 text-center text-sm text-gray-400">
                 Don't have an account?{" "}
-                <button className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+                <button
+                  className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+                  onClick={handleSignup}
+                >
                   Sign up
                 </button>
               </p>

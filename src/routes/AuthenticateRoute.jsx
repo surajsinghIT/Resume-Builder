@@ -12,7 +12,9 @@ const AuthenticateRoute = () => {
     setToken(storedToken);
   }, [location]);
 
-  return token ? <Outlet /> : <Navigate to={SIGNIN} replace />;
+  return token ? <Outlet /> : 
+  <Navigate to={SIGNIN} state={{toastMessage: "Please sign in to continue"}}
+   replace />;
 };
 
 export default AuthenticateRoute;

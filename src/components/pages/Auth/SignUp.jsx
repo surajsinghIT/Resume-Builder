@@ -1,4 +1,4 @@
-import React, { use, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Mail,
@@ -8,6 +8,8 @@ import {
   User,
   CheckCircle,
   Sparkles,
+  Phone, 
+  X
 } from "lucide-react";
 import { HOME, SIGNIN, DASHBOARD } from "../../../utils/RouteList";
 import {
@@ -15,6 +17,9 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  GithubAuthProvider,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
 } from "firebase/auth";
 import { app } from "./FirebaseAuth/Firebase";
 import { toast, ToastContainer } from "react-toastify";
@@ -25,27 +30,25 @@ const SignUp = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const providerGithub = new GithubAuthProvider();
   const [formData, setFormData] = useState({
-    // fullName: '',
     email: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
   });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
+  
   const validateForm = () => {
     const newErrors = {};
-
-    // Full Name validation
-    // if (!formData.fullName.trim()) {
-    //   newErrors.fullName = 'Full name is required';
-    // } else if (formData.fullName.trim().length < 2) {
-    //   newErrors.fullName = 'Name must be at least 2 characters';
-    // }
 
     // Email validation
     if (!formData.email) {
@@ -102,17 +105,6 @@ const SignUp = () => {
         toast.error("Something went wrong...");
         setIsLoading(false);
       });
-
-    // Simulate API call
-    // setTimeout(() => {
-    //   console.log('Sign up with:', formData);
-    //   // Store user session
-    //   localStorage.setItem('isAuthenticated', 'true');
-    //   localStorage.setItem('userEmail', formData.email);
-    //   // localStorage.setItem('userName', formData.fullName);
-    //   setIsLoading(false);
-    //   navigate(DASHBOARD);
-    // }, 2000);
   };
 
   const handleChange = (e) => {
@@ -166,19 +158,230 @@ const SignUp = () => {
         navigate(HOME);
       })
       .catch((error) => {
-        // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
         console.log(
           `Google authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
         );
         toast.error("Something went wrong.");
+        setIsLoading(false);
       });
+  };
+
+  const handleGithubLogin = () => {
+    setIsLoading(true);
+    signInWithPopup(auth, providerGithub)
+      .then((result) => {
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        const user = result.user;
+        console.log("credential", credential);
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userEmail", user?.email);
+        sessionStorage.setItem("name", user?.displayName);
+        const token = credential?.accessToken;
+        sessionStorage.setItem("token", token);
+        setIsLoading(false);
+        toast.success("User signed up successsfully.");
+        if (token) {
+          navigate(HOME);
+        }
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(
+          `github authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
+        );
+        toast.error("Something went wrong.");
+        setIsLoading(false);
+      });
+  };
+
+  // Setup reCAPTCHA when phone modal opens
+  useEffect(() => {
+    if (showPhoneModal && !window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'normal',
+          callback: (response) => {
+            console.log('reCAPTCHA verified', response);
+          },
+          'expired-callback': () => {
+            console.log('reCAPTCHA expired');
+            setError('reCAPTCHA expired. Please try again.');
+          }
+        });
+        
+        // Render the reCAPTCHA
+        window.recaptchaVerifier.render().then((widgetId) => {
+          window.recaptchaWidgetId = widgetId;
+        }).catch((err) => {
+          console.error('Error rendering reCAPTCHA:', err);
+        });
+      } catch (err) {
+        console.error('Error setting up reCAPTCHA:', err);
+        setError('Failed to initialize security verification');
+      }
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier.clear();
+        } catch (err) {
+          console.error('Error clearing reCAPTCHA:', err);
+        }
+        window.recaptchaVerifier = null;
+      }
+    };
+  }, [showPhoneModal, auth]);  
+
+  const handlePhoneLogin = () => {
+    setShowPhoneModal(true);
+    setError('');
+  };
+
+  const handleSendCode = async () => {
+    if (!phoneNumber) {
+      setError('Please enter a phone number');
+      return;
+    }
+
+    // Validate 10 digit number
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      setError('Please enter a valid 10 digit mobile number');
+      return;
+    }
+
+    // Add +91 country code for India
+    const fullPhoneNumber = `+91${phoneNumber}`;
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Make sure recaptcha is initialized
+      if (!window.recaptchaVerifier) {
+        throw new Error('reCAPTCHA not initialized');
+      }
+      
+      const appVerifier = window.recaptchaVerifier;
+      
+      const confirmationResult = await signInWithPhoneNumber(
+        auth, 
+        fullPhoneNumber, 
+        appVerifier
+      );
+      
+      // SMS sent. Store confirmation result
+      window.confirmationResult = confirmationResult;
+      setCodeSent(true);
+      console.log('SMS sent successfully to:', fullPhoneNumber);
+    } catch (err) {
+      console.error('Error sending SMS:', err);
+      
+      // Handle specific errors
+      if (err.code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many requests. Please try again later.');
+      } else if (err.code === 'auth/quota-exceeded') {
+        setError('SMS quota exceeded. Please try again later.');
+      } else if (err.message && err.message.includes('reCAPTCHA')) {
+        setError('Security verification failed. Please refresh and try again.');
+      } else {
+        setError(`${err.message}`);
+      }
+      
+      // Reset reCAPTCHA on error
+      try {
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        }
+      } catch (clearErr) {
+        console.error('Error clearing reCAPTCHA:', clearErr);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode) {
+      setError('Please enter the verification code');
+      return;
+    }
+
+    if (verificationCode.length !== 6) {
+      setError('Verification code must be 6 digits');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const result = await window.confirmationResult.confirm(verificationCode);
+      const user = result.user;
+      
+      console.log('Phone authentication successful!', user);
+      
+      // Store user session
+      sessionStorage.setItem("isAuthenticated", "true");
+      sessionStorage.setItem("userEmail", user?.email || user?.phoneNumber);
+      sessionStorage.setItem("name", user?.displayName || 'User');
+      const token = user?.accessToken;
+      sessionStorage.setItem("token", token);
+      
+      // Success! Close modal and handle user login
+      toast.success('Successfully logged in with phone number!');
+      resetPhoneModal();
+      
+      // Navigate to home
+      navigate(HOME);
+      
+    } catch (err) {
+      console.error('Error verifying code:', err);
+      
+      if (err.code === 'auth/invalid-verification-code') {
+        setError('Invalid verification code. Please try again.');
+      } else if (err.code === 'auth/code-expired') {
+        setError('Verification code expired. Please request a new one.');
+      } else {
+        setError('Failed to verify code. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPhoneModal = () => {
+    setShowPhoneModal(false);
+    setPhoneNumber('');
+    setVerificationCode('');
+    setCodeSent(false);
+    setError('');
+    setIsLoading(false);
+    
+    // Clear reCAPTCHA
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (err) {
+        console.error('Error clearing reCAPTCHA:', err);
+      }
+      window.recaptchaVerifier = null;
+    }
+    
+    // Clear confirmation result
+    window.confirmationResult = null;
   };
 
   return (
     <>
-      {isLoading ? (
+      {isLoading && !showPhoneModal ? (
         <Loader text={"Signing up with google...."} />
       ) : (
         <div
@@ -206,30 +409,6 @@ const SignUp = () => {
             {/* Sign Up Form */}
             <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl">
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Full Name Field */}
-                {/* <div>
-              <label htmlFor="fullName" className="block text-sm font-semibold text-white mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className={`w-full pl-11 pr-4 py-3 bg-white/10 border ${
-                    errors.fullName ? 'border-red-500' : 'border-white/20'
-                  } rounded-lg text-white placeholder-gray-400 focus:border-cyan-500 focus:outline-none transition-colors`}
-                  placeholder="John Doe"
-                />
-              </div>
-              {errors.fullName && (
-                <p className="mt-1 text-sm text-red-400">{errors.fullName}</p>
-              )}
-            </div> */}
-
                 {/* Email Field */}
                 <div>
                   <label
@@ -449,7 +628,7 @@ const SignUp = () => {
               </div>
 
               {/* Social Sign Up */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <button
                   type="button"
                   className="px-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
@@ -483,6 +662,7 @@ const SignUp = () => {
                 <button
                   type="button"
                   className="px-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                  onClick={handleGithubLogin}
                 >
                   <svg
                     className="w-5 h-5"
@@ -494,6 +674,15 @@ const SignUp = () => {
                   GitHub
                 </button>
               </div>
+              
+              <button
+                type="button"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                onClick={handlePhoneLogin}
+              >
+                <Phone className="w-5 h-5" />
+                Continue with Phone
+              </button>
 
               {/* Sign In Link */}
               <p className="mt-6 text-center text-sm text-gray-400">
@@ -518,6 +707,102 @@ const SignUp = () => {
             </div>
           </div>
           <ToastContainer />
+        </div>
+      )}
+      
+      {/* Phone Authentication Modal */}
+      {showPhoneModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-2xl p-8 max-w-md w-full border border-white/20 shadow-2xl relative">
+            <button
+              onClick={resetPhoneModal}
+              className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h3 className="text-2xl font-bold text-white mb-6">
+              {codeSent ? 'Enter Verification Code' : 'Phone Login'}
+            </h3>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+                {error}
+              </div>
+            )}
+
+            {!codeSent ? (
+              <div>
+                <div className="mb-6">
+                  <label className="block text-white/90 text-sm font-medium mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="9876543210"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <p className="text-white/60 text-xs mt-2">
+                    Enter 10 digit mobile number
+                  </p>
+                </div>
+
+                <div id="recaptcha-container" className="flex justify-center mb-4"></div>
+
+                <button
+                  type="button"
+                  onClick={handleSendCode}
+                  disabled={isLoading || !phoneNumber}
+                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all"
+                >
+                  {isLoading ? 'Sending...' : 'Send Verification Code'}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="mb-6">
+                  <label className="block text-white/90 text-sm font-medium mb-2">
+                    Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="000000"
+                    maxLength={6}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-center text-2xl tracking-widest placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <p className="text-white/60 text-xs mt-2 text-center">
+                    Code sent to +91{phoneNumber}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={isLoading || !verificationCode}
+                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all mb-3"
+                >
+                  {isLoading ? 'Verifying...' : 'Verify Code'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeSent(false);
+                    setVerificationCode('');
+                    setError('');
+                  }}
+                  className="w-full text-white/70 hover:text-white text-sm transition-colors"
+                >
+                  Use a different number
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Target, Users, Award } from 'lucide-react';
 
 const AboutPage = () => {
@@ -7,6 +7,10 @@ const AboutPage = () => {
     { value: '500K+', label: 'Resumes Created', icon: Target },
     { value: '98%', label: 'Satisfaction Rate', icon: Award }
   ];
+
+  useEffect(()=>{
+      window.scroll(0,0);
+     },[])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-24">

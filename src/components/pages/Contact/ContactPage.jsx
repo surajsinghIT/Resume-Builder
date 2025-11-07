@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 
 const ContactPage = () => {
@@ -14,6 +14,10 @@ const ContactPage = () => {
     alert('Message sent successfully! We will get back to you soon.');
     setFormData({ name: '', email: '', message: '' });
   };
+
+  useEffect(()=>{
+      window.scroll(0,0);
+     },[])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 py-24">

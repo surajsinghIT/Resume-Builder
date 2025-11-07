@@ -1,24 +1,24 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = { 
+const initialState = {
   resumeData: {
     personalInfo: {
-      fullName: '',
-      email: '',
-      phone: '',
-      location: '',
-      summary: ''
+      fullName: "",
+      email: "",
+      phone: "",
+      location: "",
+      summary: "",
     },
     experiences: [],
     education: [],
-    skills: []
+    skills: [],
   },
   resumeForDashboard: [],
-  downloadPdfCount:''
+  downloadPdfCount: 0,
 };
 
 const resumeSlice = createSlice({
-  name: 'resume',
+  name: "resume",
   initialState,
   reducers: {
     saveResumeData: (state, action) => {
@@ -27,7 +27,7 @@ const resumeSlice = createSlice({
     updatePersonalInfo: (state, action) => {
       state.resumeData.personalInfo = {
         ...state.resumeData.personalInfo,
-        ...action.payload
+        ...action.payload,
       };
     },
     updateExperiences: (state, action) => {
@@ -42,27 +42,30 @@ const resumeSlice = createSlice({
     clearResumeData: (state) => {
       state.resumeData = {
         personalInfo: {
-          fullName: '',
-          email: '',
-          phone: '',
-          location: '',
-          summary: ''
+          fullName: "",
+          email: "",
+          phone: "",
+          location: "",
+          summary: "",
         },
         experiences: [],
         education: [],
-        skills: []
+        skills: [],
       };
     },
     saveResumesForDashboard: (state, action) => {
-  state.resumeForDashboard = [...state.resumeForDashboard, ...action.payload];
-},
-saveDownloadPdfCount:(state,action) => {
-  state.downloadPdfCount = action.payload
-}
+      state.resumeForDashboard = [
+        ...state.resumeForDashboard,
+        ...action.payload,
+      ];
+    },
+    saveDownloadPdfCount: (state, action) => {
+      state.downloadPdfCount += action.payload;
+    },
   },
 });
 
-export const { 
+export const {
   saveResumeData,
   updatePersonalInfo,
   updateExperiences,

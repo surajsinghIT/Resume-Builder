@@ -6,9 +6,6 @@
 //     counter: userReducer,
 //   },
 // });
-
-
-
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage
@@ -17,7 +14,7 @@ import resumeReducer from './slice/userSlice';
 const persistConfig = {
   key: 'resume',
   storage,
-  whitelist: ['resumeData'] // only persist resumeData
+  whitelist: ['resumeData','downloadPdfCount'] // only persist resumeData
 };
 
 const persistedReducer = persistReducer(persistConfig, resumeReducer);

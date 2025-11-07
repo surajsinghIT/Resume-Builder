@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText,
@@ -17,6 +17,8 @@ const DashboardPage = () => {
   const { downloadPdfCount, resumeForDashboard } = useSelector(
     (state) => state.resume
   );
+
+  console.log("downloadPdfCount",downloadPdfCount)
   const navigate = useNavigate();
 
   const [resumes, setResumes] = useState([
@@ -44,6 +46,9 @@ const DashboardPage = () => {
     navigate(BUILDER, { state: { resumeId } });
   };
 
+  useEffect(()=>{
+  window.scroll(0,0);
+  },[])
   const handleDelete = (resumeId) => {
     if (window.confirm("Are you sure you want to delete this resume?")) {
       setResumes(resumes.filter((r) => r.id !== resumeId));
@@ -64,7 +69,7 @@ const DashboardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           {[
             { label: "Total Resumes", value: "12", icon: FileText },
-            { label: "Downloads", value: downloadPdfCount || "0" , icon: Download },
+            { label: "Downloads", value: downloadPdfCount , icon: Download },
             { label: "Templates Used", value: "5", icon: Star },
             { label: "Applications", value: "32", icon: Zap },
           ].map((stat, idx) => {

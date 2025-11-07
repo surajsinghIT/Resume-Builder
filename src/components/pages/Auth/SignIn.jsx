@@ -2,9 +2,24 @@
 
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, X, Send } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  Sparkles,
+  X,
+  Send,
+} from "lucide-react";
 import { HOME, DASHBOARD } from "../../../utils/RouteList";
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
 import { app } from "./FirebaseAuth/Firebase";
 import { toast, ToastContainer } from "react-toastify";
 import Loader from "../../common/Loader";
@@ -16,7 +31,7 @@ const SignIn = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetEmailError, setResetEmailError] = useState("");
   const [isResetting, setIsResetting] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -26,6 +41,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
   const validateForm = () => {
     const newErrors = {};
@@ -102,7 +118,7 @@ const SignIn = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    
+
     // Validate email
     if (!resetEmail) {
       setResetEmailError("Email is required");
@@ -113,7 +129,7 @@ const SignIn = () => {
     }
 
     setIsResetting(true);
-    
+
     try {
       await sendPasswordResetEmail(auth, resetEmail);
       toast.success("Password reset email sent! Check your inbox.");
@@ -128,6 +144,32 @@ const SignIn = () => {
       }
       setIsResetting(false);
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    setIsLoading(true);
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        console.log("resultGoogle", result);
+        const user = result?.user;
+        sessionStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("userEmail", user?.email);
+        sessionStorage.setItem("name", user?.displayName);
+        const token = user?.accessToken;
+        sessionStorage.setItem("token", token);
+        setIsLoading(false);
+        toast.success("User signed up successsfully.");
+        navigate(HOME);
+      })
+      .catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(
+          `Google authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
+        );
+        toast.error("Something went wrong.");
+      });
   };
 
   return (
@@ -280,6 +322,7 @@ const SignIn = () => {
                 <button
                   type="button"
                   className="px-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                  onClick={handleGoogleSignIn}
                 >
                   <svg
                     className="w-5 h-5"
@@ -342,17 +385,19 @@ const SignIn = () => {
 
           {/* Forgot Password Modal */}
           {showForgotPassword && (
-            <div 
+            <div
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
               onClick={closeForgotPassword}
             >
-              <div 
+              <div
                 className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 shadow-2xl max-w-md w-full mx-4 animate-fade-in"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-white/10">
-                  <h3 className="text-2xl font-bold text-white">Reset Password</h3>
+                  <h3 className="text-2xl font-bold text-white">
+                    Reset Password
+                  </h3>
                   <button
                     onClick={closeForgotPassword}
                     className="text-gray-400 hover:text-white transition-colors"
@@ -364,9 +409,10 @@ const SignIn = () => {
                 {/* Body */}
                 <form onSubmit={handleResetPassword} className="p-6">
                   <p className="text-gray-300 mb-6">
-                    Enter your email address and we'll send you a link to reset your password.
+                    Enter your email address and we'll send you a link to reset
+                    your password.
                   </p>
-                  
+
                   <div className="mb-6">
                     <label
                       htmlFor="resetEmail"
@@ -395,7 +441,9 @@ const SignIn = () => {
                       />
                     </div>
                     {resetEmailError && (
-                      <p className="mt-1 text-sm text-red-400">{resetEmailError}</p>
+                      <p className="mt-1 text-sm text-red-400">
+                        {resetEmailError}
+                      </p>
                     )}
                   </div>
 

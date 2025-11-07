@@ -1,4 +1,4 @@
-import React from 'react';
+import  { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, FileText, Sparkles } from 'lucide-react';
 import { BUILDER, TEMPLATES } from '../../../utils/RouteList';
@@ -9,6 +9,10 @@ const HomePage = () => {
     { icon: FileText, title: 'ATS-Friendly', desc: 'Pass applicant tracking systems easily' },
     { icon: Sparkles, title: 'Beautiful Templates', desc: 'Professional designs that stand out' }
   ];
+
+  useEffect(()=>{
+      window.scroll(0,0);
+     },[])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">

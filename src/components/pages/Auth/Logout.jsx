@@ -12,7 +12,8 @@ const Logout = () => {
     // Simulate logout process
     const logoutTimer = setTimeout(() => {
       // Clear user session
-      sessionStorage.clear();
+      localStorage.clear();
+      sessionStorage.clear()
       setIsLoggingOut(false);
     }, 2000);
 

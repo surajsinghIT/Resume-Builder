@@ -1,0 +1,7 @@
+Q?- How remember me works??
+Ans- Firebase provides 3 way to remember user.
+browserLocalPersistence:-	Keeps the user signed in even after browser restarts (“Remember me”).
+browserSessionPersistence:-	Keeps user signed in only until the tab or window is closed.
+inMemoryPersistence:-	Keeps user signed in only in memory, lost on page reload.
+
+NOTE: for now this is not working because i m using the localStorage to store user token , it means user persist till localStorage is clear .

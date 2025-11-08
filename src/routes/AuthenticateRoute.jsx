@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 
 const AuthenticateRoute = () => {
   const location = useLocation();
-  const [token, setToken] = useState(sessionStorage.getItem("token"));
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
   useEffect(() => {
     // Re-check token whenever route changes or token might update
-    const storedToken = sessionStorage.getItem("token");
+    const storedToken = localStorage.getItem("token");
     setToken(storedToken);
   }, [location]);
 

@@ -24,8 +24,8 @@ const Navbar = () => {
   // Check authentication status
   useEffect(() => {
     const checkAuth = () => {
-      const authStatus = sessionStorage.getItem("isAuthenticated") === "true";
-      const name = sessionStorage.getItem("name");
+      const authStatus = localStorage.getItem("isAuthenticated") === "true";
+      const name = localStorage.getItem("userEmail");
       setIsAuthenticated(authStatus);
       setUserName(name);
     };
@@ -46,7 +46,7 @@ const Navbar = () => {
     { name: "Contact", path: CONTACT },
   ];
 
-  console.log("sess", sessionStorage.getItem("token"));
+  console.log("sess", localStorage.getItem("token"));
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
@@ -90,7 +90,7 @@ const Navbar = () => {
                 <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/20">
                   <User size={18} className="text-cyan-400" />
                   <span className="text-sm text-white font-medium">
-                    {userName.split(" ")[0] || userName.split("@")[0]}
+                    {userName?.split("@")[0] ||userName?.split(" ")[0]}
                   </span>
                 </div>
 

@@ -148,11 +148,11 @@ const SignUp = () => {
       .then((result) => {
         console.log("resultGoogle", result);
         const user = result?.user;
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("userEmail", user?.email);
-        sessionStorage.setItem("name", user?.displayName);
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userEmail", user?.email);
+        localStorage.setItem("name", user?.displayName);
         const token = user?.accessToken;
-        sessionStorage.setItem("token", token);
+        localStorage.setItem("token", token);
         setIsLoading(false);
         toast.success("User signed up successsfully.");
         navigate(HOME);
@@ -175,11 +175,11 @@ const SignUp = () => {
         const credential = GithubAuthProvider.credentialFromResult(result);
         const user = result.user;
         console.log("credential", credential);
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("userEmail", user?.email);
-        sessionStorage.setItem("name", user?.displayName);
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userEmail", user?.email);
+        localStorage.setItem("name", user?.displayName);
         const token = credential?.accessToken;
-        sessionStorage.setItem("token", token);
+        localStorage.setItem("token", token);
         setIsLoading(false);
         toast.success("User signed up successsfully.");
         if (token) {
@@ -191,8 +191,8 @@ const SignUp = () => {
         const errorMessage = error.message;
         console.log(
           `github authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
-        );
-        toast.error("Something went wrong.");
+        );                          
+          toast.error("Something went wrong.");                
         setIsLoading(false);
       });
   };
@@ -329,11 +329,11 @@ const SignUp = () => {
       console.log('Phone authentication successful!', user);
       
       // Store user session
-      sessionStorage.setItem("isAuthenticated", "true");
-      sessionStorage.setItem("userEmail", user?.email || user?.phoneNumber);
-      sessionStorage.setItem("name", user?.displayName || 'User');
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userEmail", user?.email || user?.phoneNumber);
+      localStorage.setItem("name", user?.displayName || 'User');
       const token = user?.accessToken;
-      sessionStorage.setItem("token", token);
+      localStorage.setItem("token", token);
       
       // Success! Close modal and handle user login
       toast.success('Successfully logged in with phone number!');
@@ -706,7 +706,7 @@ const SignUp = () => {
               </Link>
             </div>
           </div>
-          <ToastContainer />
+          {/* <ToastContainer /> */}
         </div>
       )}
       

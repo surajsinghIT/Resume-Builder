@@ -1,6 +1,6 @@
 // src/pages/Auth/SignIn.jsx - Updated with Forgot Password Modal
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
   Mail,
@@ -20,9 +20,13 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   GithubAuthProvider,
+  setPersistence,
+  browserSessionPersistence,
+  browserLocalPersistence,
+  inMemoryPersistence,
 } from "firebase/auth";
 import { app } from "./FirebaseAuth/Firebase";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import Loader from "../../common/Loader";
 
 const SignIn = () => {
@@ -32,6 +36,7 @@ const SignIn = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetEmailError, setResetEmailError] = useState("");
   const [isResetting, setIsResetting] = useState(false);
+   const toastShown = useRef(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -44,11 +49,13 @@ const SignIn = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const toastMsg = location?.state?.toastMessage;
-    if (toastMsg) {
-      toast.info(toastMsg);
+    if (location?.state?.toastMessage && !toastShown.current) {
+      toast.info(location.state.toastMessage);
+      toastShown.current = true; // 👈 prevent duplicates
+      navigate(location.pathname, { replace: true, state: {} }); // clear state
     }
-  }, []);
+  }, [location, navigate]);
+
 
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
@@ -77,29 +84,35 @@ const SignIn = () => {
     e.preventDefault();
     if (!validateForm()) return;
     setIsLoading(true);
-    signInWithEmailAndPassword(auth, formData.email, formData.password)
-      .then((user) => {
-        console.log("SignedInuser", user);
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("userEmail", user?.user?.email);
-        sessionStorage.setItem("token", user?.user?.accessToken);
-        setIsLoading(false);
-        toast.success("User Signed in...");
-        setTimeout(() => {
-          navigate(HOME);
-        }, 1500);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log("errorSignIn", errorCode);
-        if (errorCode === "auth/invalid-credential") {
-          toast.error("Please enter correct credentials...");
-        } else {
-          toast.error("Something went wrong...");
-        }
-        setIsLoading(false);
-      });
+
+    try {
+      // Use rememberMe to decide persistence type
+      await setPersistence(
+        auth,
+        formData.rememberMe ? inMemoryPersistence  // stays after browser close
+        : browserSessionPersistence // clears when tab closes
+      );
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      const user = userCredential.user;
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem("token", user.accessToken);
+      setIsLoading(false);      
+      setTimeout(() => navigate(HOME), 1500);
+      toast.success("User Signed in...");
+    } catch (error) {
+      console.log("errorSignIn", error.code);
+      if (error.code === "auth/invalid-credential") {
+        toast.error("Please enter correct credentials...");
+      } else {
+        toast.error("Something went wrong...");
+      }
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -163,15 +176,15 @@ const SignIn = () => {
       .then((result) => {
         console.log("resultGoogle", result);
         const user = result?.user;
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("userEmail", user?.email);
-        sessionStorage.setItem("name", user?.displayName);
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userEmail", user?.email);
+        localStorage.setItem("name", user?.displayName);
         const token = user?.accessToken;
-        sessionStorage.setItem("token", token);
+        localStorage.setItem("token", token);
         setIsLoading(false);
         toast.success("User signed up successsfully.");
-        if(token){
-          navigate(HOME);        
+        if (token) {
+          navigate(HOME);
         }
       })
       .catch((error) => {
@@ -181,7 +194,7 @@ const SignIn = () => {
         console.log(
           `Google authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
         );
-        toast.error("Something went wrong.");        
+        toast.error("Something went wrong.");
       });
   };
 
@@ -198,26 +211,25 @@ const SignIn = () => {
         const credential = GithubAuthProvider.credentialFromResult(result);
         const user = result.user;
         console.log("credential", credential);
-        sessionStorage.setItem("isAuthenticated", "true");
-        sessionStorage.setItem("userEmail", user?.email);
-        sessionStorage.setItem("name", user?.displayName);
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("userEmail", user?.email);
+        localStorage.setItem("name", user?.displayName);
         const token = credential?.accessToken;
-        sessionStorage.setItem("token", token);
+        localStorage.setItem("token", token);
         setIsLoading(false);
         toast.success("User signed up successsfully.");
-        if(token){
-          navigate(HOME);        
+        if (token) {
+          navigate(HOME);
         }
-        
       })
       .catch((error) => {
-         // Handle Errors here.
+        // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
         console.log(
           `github authentication failed with errorCode: ${errorCode} and errormessage: ${errorMessage}`
         );
-        toast.error("Something went wrong.");              
+        toast.error("Something went wrong.");
       });
   };
 
@@ -532,7 +544,7 @@ const SignIn = () => {
             </div>
           )}
 
-          <ToastContainer />
+          {/* <ToastContainer position="top-right" /> */}
         </div>
       )}
     </>

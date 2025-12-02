@@ -12,6 +12,7 @@ const initialState = {
     experiences: [],
     education: [],
     skills: [],
+    projects: [],
   },
   resumeForDashboard: [],
   downloadPdfCount: 0,
@@ -38,6 +39,9 @@ const resumeSlice = createSlice({
     },
     updateSkills: (state, action) => {
       state.resumeData.skills = action.payload;
+    },
+    updateProjects: (state, action) => {
+      state.resumeData.projects = action.payload;
     },
     clearResumeData: (state) => {
       state.resumeData = {
@@ -74,6 +78,7 @@ export const {
   saveResumesForDashboard,
   clearResumeData,
   saveDownloadPdfCount,
+  updateProjects
 } = resumeSlice.actions;
 
 export default resumeSlice.reducer;

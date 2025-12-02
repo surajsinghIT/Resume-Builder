@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Award,
   RotateCcw,
+  FolderGit2,
 } from "lucide-react";
 import { DASHBOARD } from "../../../utils/RouteList";
 import {
@@ -22,10 +23,55 @@ import {
   clearResumeData,
   saveResumesForDashboard,
   saveDownloadPdfCount,
+  updateProjects,
 } from "../../../Redux/slice/userSlice";
 import Modal from "../../common/Modal";
 import { pdf } from "@react-pdf/renderer";
 import ResumePDF from "../../../components/pages/Builder/ResumePdf/ResumePdf";
+
+
+// Add this helper function before the BuilderPage component
+const getTemplateStyles = (templateId) => {
+  const configs = {
+    1: { // Professional Classic
+      header: "bg-blue-50 border-b-4 border-blue-500",
+      sectionTitle: "text-blue-600 border-b-2 border-blue-500 uppercase tracking-wide",
+      sectionBorder: "border-l-4 border-blue-500 pl-4",
+      skillBadge: "bg-blue-100 text-blue-700 border border-blue-300"
+    },
+    2: { // Modern Minimalist
+      header: "bg-gradient-to-r from-purple-50 to-pink-50 border-b-4 border-purple-500",
+      sectionTitle: "text-purple-600 border-b-2 border-purple-500 uppercase font-black tracking-wider",
+      sectionBorder: "border-l-4 border-purple-500 pl-4",
+      skillBadge: "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border border-purple-300"
+    },
+    3: { // Creative Designer
+      header: "bg-gradient-to-br from-orange-50 to-red-50 border-b-4 border-orange-500",
+      sectionTitle: "text-orange-600 border-b-2 border-orange-500 uppercase font-bold tracking-wide",
+      sectionBorder: "border-l-4 border-orange-500 pl-4 bg-orange-50/30",
+      skillBadge: "bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border border-orange-300"
+    },
+    4: { // Tech Developer
+      header: "bg-green-50 border-b-4 border-green-500",
+      sectionTitle: "text-green-600 border-b-2 border-green-500 uppercase font-mono tracking-wider",
+      sectionBorder: "border-l-4 border-green-500 pl-4",
+      skillBadge: "bg-green-100 text-green-800 border border-green-400 font-mono"
+    },
+    5: { // Academic Scholar
+      header: "bg-indigo-50 border-b-4 border-indigo-500",
+      sectionTitle: "text-indigo-700 border-b-2 border-indigo-500 uppercase tracking-wide font-serif",
+      sectionBorder: "border-l-4 border-indigo-500 pl-4",
+      skillBadge: "bg-indigo-100 text-indigo-700 border border-indigo-300"
+    },
+    6: { // Executive Premium
+      header: "bg-gradient-to-r from-amber-50 to-yellow-50 border-b-4 border-amber-500",
+      sectionTitle: "text-amber-700 border-b-2 border-amber-500 uppercase tracking-widest font-bold",
+      sectionBorder: "border-l-4 border-amber-500 pl-4 bg-amber-50/20",
+      skillBadge: "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-400"
+    }
+  };
+  return configs[templateId] || configs[1];
+};
 
 const BuilderPage = () => {
   const navigate = useNavigate();
@@ -35,7 +81,8 @@ const BuilderPage = () => {
 
   // Get data from Redux store
   const resumeData = useSelector((state) => state.resume.resumeData);
-  const { personalInfo, experiences, education, skills } = resumeData;
+  const { personalInfo, experiences, education, skills, projects } = resumeData;
+
 
   // Modal state
   const [modalConfig, setModalConfig] = useState({
@@ -247,6 +294,34 @@ const BuilderPage = () => {
     } catch (error) {
       console.error("Error generating PDF:", error);
     }
+  };
+
+  const updateProject = (id, field, value) => {
+    const updatedProjects = projects?.map((proj) =>
+      proj.id === id ? { ...proj, [field]: value } : proj
+    );
+    dispatch(updateProjects(updatedProjects));
+  };
+
+  const removeProject = (id) => {
+    showConfirmModal(
+      "Are you sure you want to delete this project?",
+      () => {
+        dispatch(updateProjects(projects?.filter((proj) => proj.id !== id)));
+        showSuccessModal("Project deleted successfully!");
+      }
+    );
+  };
+
+  const addProject = () => {
+    const newProject = {
+      id: Date.now(),
+      name: "",
+      technologies: "",
+      link: "",
+      description: "",
+    };
+    dispatch(updateProjects([...(projects || []), newProject]));
   };
 
   return (
@@ -502,6 +577,85 @@ const BuilderPage = () => {
               )}
             </div>
 
+            {/* Projects Section - NEW */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <FolderGit2 className="text-pink-400" size={24} />
+                  <h2 className="text-2xl font-bold text-white">Projects</h2>
+                </div>
+                <button
+                  onClick={addProject}
+                  className="p-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+
+              {projects?.length === 0 ? (
+                <div className="text-gray-400 text-center py-8">
+                  Click + to add your projects
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {projects?.map((proj) => (
+                    <div
+                      key={proj.id}
+                      className="p-4 bg-white/5 rounded-lg border border-white/10 space-y-3"
+                    >
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-white font-semibold">
+                          Project Entry
+                        </h3>
+                        <button
+                          onClick={() => removeProject(proj.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Project Name"
+                        value={proj.name}
+                        onChange={(e) =>
+                          updateProject(proj.id, "name", e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:border-cyan-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Technologies Used (e.g., React, Node.js, MongoDB)"
+                        value={proj.technologies}
+                        onChange={(e) =>
+                          updateProject(proj.id, "technologies", e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:border-cyan-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Project Link (GitHub, Live Demo, etc.)"
+                        value={proj.link}
+                        onChange={(e) =>
+                          updateProject(proj.id, "link", e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:border-cyan-500 focus:outline-none"
+                      />
+                      <textarea
+                        placeholder="Project Description"
+                        rows="3"
+                        value={proj.description}
+                        onChange={(e) =>
+                          updateProject(proj.id, "description", e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:border-cyan-500 focus:outline-none"
+                      ></textarea>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Skills Section */}
             <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
               <div className="flex items-center justify-between mb-6">
@@ -559,112 +713,205 @@ const BuilderPage = () => {
           </div>
 
           {/* Preview Section */}
-          <div className="lg:sticky lg:top-24 h-fit">
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Live Preview</h2>
-                <Eye className="text-cyan-400" size={24} />
-              </div>
-              <div className="bg-white rounded-lg p-8 min-h-[600px] shadow-2xl overflow-auto max-h-[800px]">
-                {/* Header */}
-                <div className="text-center mb-6 pb-6 border-b-2 border-gray-200">
-                  <h3 className="text-3xl font-bold text-gray-900">
-                    {personalInfo.fullName || "Your Name"}
-                  </h3>
-                  <p className="text-gray-600 mt-2">
-                    {personalInfo.email || "email@example.com"} |{" "}
-                    {personalInfo.phone || "+1234567890"}
-                  </p>
-                  <p className="text-gray-600">
-                    {personalInfo.location || "Your Location"}
-                  </p>
-                </div>
+          {/* Preview Section */}
+<div className="lg:sticky lg:top-24 h-fit">
+  <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-2xl font-bold text-white">Live Preview</h2>
+      <div className="flex items-center gap-3">
+        {templateId && (
+          <span className="text-cyan-400 text-sm font-semibold px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30">
+            Template #{templateId}
+          </span>
+        )}
+        <Eye className="text-cyan-400" size={24} />
+      </div>
+    </div>
+    <div className="bg-white rounded-lg shadow-2xl overflow-auto max-h-[800px] custom-scrollbar">
+      {(() => {
+        const template = getTemplateStyles(templateId || 1);
 
-                {/* Summary */}
-                {personalInfo.summary && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-bold text-gray-900 mb-2 pb-2 border-b-2 border-cyan-500">
-                      SUMMARY
-                    </h4>
-                    <p className="text-gray-700 text-sm">
-                      {personalInfo.summary}
-                    </p>
-                  </div>
+        return (
+          <>
+            {/* Header */}
+            <div className={`${template.header} p-10 text-center`}>
+              <h3 className="text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                {personalInfo.fullName || "Your Name"}
+              </h3>
+              <div className="flex items-center justify-center gap-3 text-gray-600 text-base flex-wrap">
+                <span className="flex items-center gap-1">
+                  📧 {personalInfo.email || "email@example.com"}
+                </span>
+                <span className="text-gray-400">•</span>
+                <span className="flex items-center gap-1">
+                  📱 {personalInfo.phone || "+1234567890"}
+                </span>
+                {personalInfo.location && (
+                  <>
+                    <span className="text-gray-400">•</span>
+                    <span className="flex items-center gap-1">
+                      📍 {personalInfo.location}
+                    </span>
+                  </>
                 )}
-
-                {/* Experience */}
-                {experiences.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b-2 border-cyan-500">
-                      EXPERIENCE
-                    </h4>
-                    {experiences.map((exp) => (
-                      <div key={exp.id} className="mb-4">
-                        <h5 className="font-bold text-gray-900">
-                          {exp.title || "Job Title"}
-                        </h5>
-                        <p className="text-sm text-gray-600">
-                          {exp.company || "Company"} | {exp.startDate} -{" "}
-                          {exp.endDate}
-                        </p>
-                        <p className="text-sm text-gray-700 mt-1">
-                          {exp.description}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Education */}
-                {education.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b-2 border-cyan-500">
-                      EDUCATION
-                    </h4>
-                    {education.map((edu) => (
-                      <div key={edu.id} className="mb-3">
-                        <h5 className="font-bold text-gray-900">
-                          {edu.degree || "Degree"}
-                        </h5>
-                        <p className="text-sm text-gray-600">
-                          {edu.school || "School"} | {edu.year}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Skills */}
-                {skills.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b-2 border-cyan-500">
-                      SKILLS
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {skills.map((skill) => (
-                        <span
-                          key={skill.id}
-                          className="px-3 py-1 bg-gray-200 rounded-full text-sm text-gray-700"
-                        >
-                          {skill.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {!personalInfo.fullName &&
-                  experiences.length === 0 &&
-                  education.length === 0 &&
-                  skills.length === 0 && (
-                    <div className="text-gray-400 text-center py-12">
-                      Your resume preview will appear here as you fill in the
-                      form
-                    </div>
-                  )}
               </div>
             </div>
-          </div>
+
+            <div className="p-10 space-y-8">
+              {/* Summary */}
+              {personalInfo.summary && (
+                <div>
+                  <h4 className={`${template.sectionTitle} text-xl font-extrabold mb-4 pb-2`}>
+                    Professional Summary
+                  </h4>
+                  <p className="text-gray-700 text-base leading-relaxed">
+                    {personalInfo.summary}
+                  </p>
+                </div>
+              )}
+
+              {/* Experience */}
+              {experiences.length > 0 && (
+                <div>
+                  <h4 className={`${template.sectionTitle} text-xl font-extrabold mb-4 pb-2`}>
+                    Work Experience
+                  </h4>
+                  <div className="space-y-5">
+                    {experiences.map((exp) => (
+                      <div key={exp.id} className={`${template.sectionBorder} py-2 relative`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-bold text-gray-900 text-lg">
+                            {exp.title || "Job Title"}
+                          </h5>
+                          <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded whitespace-nowrap ml-2">
+                            {exp.startDate && exp.endDate ? `${exp.startDate} - ${exp.endDate}` : "Duration"}
+                          </span>
+                        </div>
+                        <p className="text-base font-semibold text-gray-700 mb-2">
+                          {exp.company || "Company"}
+                        </p>
+                        {exp.description && (
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            {exp.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Education */}
+              {education.length > 0 && (
+                <div>
+                  <h4 className={`${template.sectionTitle} text-xl font-extrabold mb-4 pb-2`}>
+                    Education
+                  </h4>
+                  <div className="space-y-4">
+                    {education.map((edu) => (
+                      <div key={edu.id} className={`${template.sectionBorder} py-2`}>
+                        <div className="flex justify-between items-start mb-1">
+                          <h5 className="font-bold text-gray-900 text-base">
+                            {edu.degree || "Degree"}
+                          </h5>
+                          {edu.year && (
+                            <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded ml-2">
+                              {edu.year}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium text-gray-700">
+                          {edu.school || "School"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Projects */}
+              {projects?.length > 0 && (
+                <div>
+                  <h4 className={`${template.sectionTitle} text-xl font-extrabold mb-4 pb-2`}>
+                    Projects
+                  </h4>
+                  <div className="space-y-5">
+                    {projects.map((proj) => (
+                      <div key={proj.id} className={`${template.sectionBorder} py-2 relative`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-bold text-gray-900 text-lg">
+                            {proj.name || "Project Name"}
+                          </h5>
+                          {proj.link && (
+                            <a 
+                              href={proj.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 hover:bg-blue-100 hover:border-blue-300 hover:scale-105 transition-all shadow-sm ml-2 whitespace-nowrap"
+                            >
+                              <span>🔗</span>
+                              <span>VIEW</span>
+                            </a>
+                          )}
+                        </div>
+                        
+                        {proj.technologies && (
+                          <div className="mb-2">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tech Stack:</span>
+                            <p className="text-sm font-medium text-gray-700 mt-0.5">
+                              {proj.technologies}
+                            </p>
+                          </div>
+                        )}
+
+                        {proj.description && (
+                          <p className="text-sm text-gray-600 leading-relaxed mt-2">
+                            {proj.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Skills */}
+              {skills.length > 0 && (
+                <div>
+                  <h4 className={`${template.sectionTitle} text-xl font-extrabold mb-4 pb-2`}>
+                    Skills & Technologies
+                  </h4>
+                  <div className="flex flex-wrap gap-2.5">
+                    {skills.map((skill) => (
+                      <span
+                        key={skill.id}
+                        className={`${template.skillBadge} px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md transition-shadow`}
+                      >
+                        {skill.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!personalInfo.fullName &&
+                experiences.length === 0 &&
+                education.length === 0 &&
+                skills.length === 0 &&
+                projects?.length === 0 && (
+                  <div className="text-gray-400 text-center py-16">
+                    <div className="text-6xl mb-4">📝</div>
+                    <p className="text-lg font-medium">Your resume preview will appear here</p>
+                    <p className="text-sm mt-2">Start filling in the form to see your resume come to life</p>
+                  </div>
+                )}
+            </div>
+          </>
+        );
+      })()}
+    </div>
+  </div>
+</div>
         </div>
       </div>
 

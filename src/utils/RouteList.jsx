@@ -1,5 +1,6 @@
 export const HOME = '/';
 export const TEMPLATES = '/templates';
+export const TEMPLATESELECTOR = '/template-selector';
 export const BUILDER = '/builder';
 export const DASHBOARD = '/dashboard';
 export const PRICING = '/pricing';

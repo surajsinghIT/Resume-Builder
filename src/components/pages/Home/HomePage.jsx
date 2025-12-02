@@ -1,7 +1,7 @@
 import  { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, FileText, Sparkles } from 'lucide-react';
-import { BUILDER, TEMPLATES } from '../../../utils/RouteList';
+import { BUILDER, TEMPLATES, TEMPLATESELECTOR } from '../../../utils/RouteList';
 
 const HomePage = () => {
   const features = [
@@ -37,7 +37,7 @@ const HomePage = () => {
               Create stunning, resumes in minutes 
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Link to={BUILDER} className="group px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-full hover:shadow-xl hover:shadow-purple-500/50 transition-all flex items-center gap-2">
+              <Link to={TEMPLATESELECTOR} className="group px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-full hover:shadow-xl hover:shadow-purple-500/50 transition-all flex items-center gap-2">
                 Start Building <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </Link>
               {/* <Link to={TEMPLATES} className="px-8 py-4 bg-white/10 backdrop-blur-lg text-white font-semibold rounded-full border border-white/20 hover:bg-white/20 transition-all">

@@ -1,8 +1,9 @@
 import { Route, Routes } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Loader from "../components/common/Loader";
-import { HOME, TEMPLATES, BUILDER, DASHBOARD, PRICING, FEATURES, ABOUT, CONTACT,SIGNIN,SIGNUP,LOGOUT } from "../utils/RouteList";
+import { HOME, TEMPLATES, BUILDER, DASHBOARD, PRICING, FEATURES, ABOUT, CONTACT,SIGNIN,SIGNUP,LOGOUT, TEMPLATESELECTOR } from "../utils/RouteList";
 import AuthenticateRoute from "./AuthenticateRoute";
+import TemplateSelector from "../components/pages/Templates/TemplateSelector";
 
 // Lazy load all pages
 const HomePage = lazy(()=> import("../components/pages/Home/HomePage"))
@@ -27,6 +28,7 @@ function MainRoutes() {
       <Routes>
         <Route element={<AuthenticateRoute/>}>
           <Route path={HOME} element={<HomePage />} />
+          <Route path={TEMPLATESELECTOR} element={<TemplateSelector />} />
           <Route path={TEMPLATES} element={<TemplatesPage />} />
           <Route path={BUILDER} element={<BuilderPage />} />
           <Route path={DASHBOARD} element={<DashboardPage />} />

@@ -1,32 +1,35 @@
-// import { configureStore } from '@reduxjs/toolkit';
-// import userReducer from './slice/userSlice';
+// Redux/store.js
+import { configureStore } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // localStorage for web
+import resumeReducer from "./slice/userSlice"; // Adjust the path as needed
 
-// export const store = configureStore({
-//   reducer: {
-//     counter: userReducer,
-//   },
-// });
-import { configureStore } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // localStorage
-import resumeReducer from './slice/userSlice';
-
+// Persist configuration
 const persistConfig = {
-  key: 'resume',
+  key: "resume", // Storage key name
   storage,
-  whitelist: ['resumeData','downloadPdfCount'] // only persist resumeData
+  whitelist: ["resumeForDashboard", "downloadPdfCount"], // Only persist these fields
+  // This ensures resumeData and currentEditingResumeId are NOT persisted (fresh on each session)
 };
 
-const persistedReducer = persistReducer(persistConfig, resumeReducer);
+// Create a persisted reducer
+const persistedResumeReducer = persistReducer(persistConfig, resumeReducer);
 
+// Configure store with persisted reducer
 export const store = configureStore({
   reducer: {
-    resume: persistedReducer,
+    resume: persistedResumeReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActions: [
+          "persist/PERSIST",
+          "persist/REHYDRATE",
+          "persist/PAUSE",
+          "persist/PURGE",
+          "persist/REGISTER",
+        ],
       },
     }),
 });

@@ -16,6 +16,7 @@ const initialState = {
   },
   resumeForDashboard: [],
   downloadPdfCount: 0,
+  currentEditingResumeId: null, // NEW: Track which resume is being edited
 };
 
 const resumeSlice = createSlice({
@@ -55,13 +56,51 @@ const resumeSlice = createSlice({
         experiences: [],
         education: [],
         skills: [],
+        projects: [],
       };
+      state.currentEditingResumeId = null;
     },
+    // NEW: Set which resume is being edited
+    setCurrentEditingResume: (state, action) => {
+      state.currentEditingResumeId = action.payload;
+    },
+    // UPDATED: Save or update resume
     saveResumesForDashboard: (state, action) => {
-      state.resumeForDashboard = [
-        ...state.resumeForDashboard,
-        ...action.payload,
-      ];
+      const { resumeData, templateId } = action.payload; // Get resume data and templateId
+      
+      if (state.currentEditingResumeId !== null) {
+        // UPDATE existing resume
+        const index = state.resumeForDashboard.findIndex(
+          resume => resume.id === state.currentEditingResumeId
+        );
+        
+        if (index !== -1) {
+          state.resumeForDashboard[index] = {
+            ...resumeData,
+            id: state.currentEditingResumeId,
+            templateId: templateId || state.resumeForDashboard[index].templateId || 1,
+            lastEdited: new Date().toLocaleDateString(),
+          };
+        }
+      } else {
+        // ADD new resume
+        const newResume = {
+          ...resumeData,
+          id: Date.now(),
+          templateId: templateId || 1,
+          lastEdited: new Date().toLocaleDateString(),
+        };
+        state.resumeForDashboard.push(newResume);
+      }
+      
+      // Reset editing state
+      state.currentEditingResumeId = null;
+    },
+    // NEW: Delete resume
+    deleteResume: (state, action) => {
+      state.resumeForDashboard = state.resumeForDashboard.filter(
+        resume => resume.id !== action.payload
+      );
     },
     saveDownloadPdfCount: (state, action) => {
       state.downloadPdfCount += action.payload;
@@ -78,7 +117,9 @@ export const {
   saveResumesForDashboard,
   clearResumeData,
   saveDownloadPdfCount,
-  updateProjects
+  updateProjects,
+  setCurrentEditingResume,
+  deleteResume,
 } = resumeSlice.actions;
 
 export default resumeSlice.reducer;

@@ -462,13 +462,19 @@ const BuilderPage = () => {
   };
 
   const handleSave = () => {
-    console.log("Resume saved to Redux:", resumeData);
-    dispatch(saveResumesForDashboard([resumeData]));
-    showSuccessModal("Resume saved successfully to your browser!");
-    setTimeout(() => {
-      navigate(DASHBOARD);
-    }, 2000);
-  };
+  console.log("Resume saved to Redux:", resumeData);
+  
+  // Pass both resumeData and templateId
+  dispatch(saveResumesForDashboard({ 
+    resumeData, 
+    templateId: currentTemplateId || 1 
+  }));
+  
+  showSuccessModal("Resume saved successfully!");
+  setTimeout(() => {
+    navigate(DASHBOARD);
+  }, 2000);
+};
 
   const handleDownload = async () => {
     try {

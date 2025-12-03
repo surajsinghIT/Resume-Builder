@@ -151,7 +151,7 @@ const TemplateSelector = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto" style={{marginTop:"60px"}}>
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">

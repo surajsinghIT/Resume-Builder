@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import Modal from '../../common/Modal'; // Adjust path as needed
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -8,16 +9,42 @@ const ContactPage = () => {
     message: ''
   });
 
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    type: "info",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const closeModal = () => {
+    setModalConfig({ ...modalConfig, isOpen: false });
+  };
+
+  const showSuccessModal = (message) => {
+    setModalConfig({
+      isOpen: true,
+      type: "success",
+      title: "Success!",
+      message,
+      onConfirm: closeModal,
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
-    alert('Message sent successfully! We will get back to you soon.');
+    
+    // Show success modal
+    showSuccessModal('Message sent successfully! We will get back to you soon.');
+    
+    // Clear form
     setFormData({ name: '', email: '', message: '' });
   };
 
-  useEffect(()=>{
-      window.scroll(0,0);
-     },[])
+  useEffect(() => {
+    window.scroll(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 py-24">
@@ -87,8 +114,8 @@ const ContactPage = () => {
                 <Phone className="text-white" size={24} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Call Us</h3>
-              <p className="text-gray-400">+1 (555) 123-4567</p>
-              <p className="text-gray-400">Mon-Fri: 9AM - 6PM EST</p>
+              <p className="text-gray-400">+91 (522) 123-4567</p>
+              <p className="text-gray-400">Mon-Sat: 10AM - 7PM IST</p>
             </div>
 
             <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 hover:border-pink-500/50 transition-all">
@@ -96,12 +123,22 @@ const ContactPage = () => {
                 <MapPin className="text-white" size={24} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Visit Us</h3>
-              <p className="text-gray-400">123 Tech Street</p>
-              <p className="text-gray-400">San Francisco, CA 94105</p>
+              <p className="text-gray-400">Gomti Nagar</p>
+              <p className="text-gray-400">Lucknow, Uttar Pradesh 226010</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal Component */}
+      <Modal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 };

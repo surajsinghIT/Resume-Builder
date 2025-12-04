@@ -33,6 +33,38 @@ import Modal from "../../common/Modal";
 import { pdf } from "@react-pdf/renderer";
 import ResumePDF from "../../../components/pages/Builder/ResumePdf/ResumePdf";
 
+const validateResumeData = (personalInfo, experiences, education, projects, skills) => {
+  const errors = [];
+
+  // Personal Info validation - all fields required
+  if (!personalInfo.fullName?.trim()) errors.push("Full Name is required");
+  if (!personalInfo.email?.trim()) errors.push("Email is required");
+  if (!personalInfo.phone?.trim()) errors.push("Phone is required");
+  if (!personalInfo.location?.trim()) errors.push("Location is required");
+
+  // Experience validation
+  if (!experiences || experiences.length === 0) {
+    errors.push("At least one work experience is required");
+  }
+
+  // Education validation
+  if (!education || education.length === 0) {
+    errors.push("At least one education entry is required");
+  }
+
+  // Projects validation
+  if (!projects || projects.length === 0) {
+    errors.push("At least one project is required");
+  }
+
+  // Skills validation - minimum 3
+  if (!skills || skills.length < 3) {
+    errors.push(`At least 3 skills are required (currently ${skills?.length || 0})`);
+  }
+
+  return errors;
+};
+
 // Template Switcher Component (inline)
 const TemplateSwitcher = ({ currentTemplateId, onTemplateChange, onClose }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(currentTemplateId);
@@ -272,6 +304,20 @@ const BuilderPage = () => {
     inputValue: "",
   });
 
+  // Check if download button should be enabled
+  const isDownloadEnabled = () => {
+    return (
+      personalInfo.fullName?.trim() &&
+      personalInfo.email?.trim() &&
+      personalInfo.phone?.trim() &&
+      personalInfo.location?.trim() &&
+      experiences?.length > 0 &&
+      education?.length > 0 &&
+      projects?.length > 0 &&
+      skills?.length >= 3
+    );
+  };
+
   const closeModal = () => {
     setModalConfig({ ...modalConfig, isOpen: false, inputValue: "" });
   };
@@ -281,6 +327,16 @@ const BuilderPage = () => {
       isOpen: true,
       type: "success",
       title: "Success!",
+      message,
+      onConfirm: closeModal,
+    });
+  };
+
+  const showErrorModal = (message) => {
+    setModalConfig({
+      isOpen: true,
+      type: "error",
+      title: "Validation Failed",
       message,
       onConfirm: closeModal,
     });
@@ -451,6 +507,20 @@ const BuilderPage = () => {
     dispatch(updateProjects([...(projects || []), newProject]));
   };
 
+  const hasAnyData = () => {
+  return (
+    personalInfo.fullName?.trim() ||
+    personalInfo.email?.trim() ||
+    personalInfo.phone?.trim() ||
+    personalInfo.location?.trim() ||
+    personalInfo.summary?.trim() ||
+    experiences?.length > 0 ||
+    education?.length > 0 ||
+    projects?.length > 0 ||
+    skills?.length > 0
+  );
+};
+
   const handleClearAll = () => {
     showConfirmModal(
       "Are you sure you want to clear all data? This action cannot be undone.",
@@ -462,21 +532,29 @@ const BuilderPage = () => {
   };
 
   const handleSave = () => {
-  console.log("Resume saved to Redux:", resumeData);
-  
-  // Pass both resumeData and templateId
-  dispatch(saveResumesForDashboard({ 
-    resumeData, 
-    templateId: currentTemplateId || 1 
-  }));
-  
-  showSuccessModal("Resume saved successfully!");
-  setTimeout(() => {
-    navigate(DASHBOARD);
-  }, 2000);
-};
+    console.log("Resume saved to Redux:", resumeData);
+    
+    dispatch(saveResumesForDashboard({ 
+      resumeData, 
+      templateId: currentTemplateId || 1 
+    }));
+    
+    showSuccessModal("Resume saved successfully!");
+    setTimeout(() => {
+      navigate(DASHBOARD);
+    }, 2000);
+  };
 
   const handleDownload = async () => {
+    // Validate resume data before download
+    const errors = validateResumeData(personalInfo, experiences, education, projects, skills);
+    
+    if (errors.length > 0) {
+      const errorMessage = "Please complete the following requirements:\n\n• " + errors.join("\n• ");
+      showErrorModal(errorMessage);
+      return;
+    }
+
     try {
       const blob = await pdf(
         <ResumePDF
@@ -499,7 +577,7 @@ const BuilderPage = () => {
       showSuccessModal("Resume downloaded successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
-      showSuccessModal("Failed to download resume. Please try again.");
+      showErrorModal("Failed to download resume. Please try again.");
     }
   };
 
@@ -531,10 +609,15 @@ const BuilderPage = () => {
           </div>
           <button
             onClick={handleClearAll}
-            className="px-6 py-3 bg-red-500/20 border border-red-500 text-red-400 font-semibold rounded-lg hover:bg-red-500/30 transition-all flex items-center gap-2"
-          >
+            disabled={!hasAnyData()}
+            className={`px-6 py-3 font-semibold rounded-lg transition-all flex items-center gap-2 ${
+              hasAnyData()
+                ? 'bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/30 cursor-pointer'
+                : 'bg-gray-500/20 border border-gray-500 text-gray-500 cursor-not-allowed opacity-50'
+            }`}
+            >
             <RotateCcw size={20} /> Clear All
-          </button>
+            </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

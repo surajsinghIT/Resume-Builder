@@ -32,9 +32,9 @@ const Logout = () => {
     }
   }, [countdown, isLoggingOut, navigate]);
 
-  const handleSignInAgain = () => {
-    navigate(SIGNIN);
-  };
+  // const handleSignInAgain = () => {
+  //   navigate(SIGNIN);
+  // };
 
   const handleGoHome = () => {
     navigate(HOME);
@@ -90,7 +90,7 @@ const Logout = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <button
                   onClick={handleSignInAgain}
                   className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all flex items-center justify-center gap-2"
@@ -98,7 +98,7 @@ const Logout = () => {
                   <LogOut size={20} className="rotate-180" />
                   Sign In Again
                 </button>                
-              </div>
+              </div> */}
             </>
           )}
         </div>
@@ -107,7 +107,7 @@ const Logout = () => {
         {!isLoggingOut && (
           <div className="mt-6 text-center">
             <p className="text-gray-400 text-sm">
-              Thanks for using ResumeAI! We hope to see you again soon.
+              Thanks for using Resume Builder! We hope to see you again soon.
             </p>
           </div>
         )}
